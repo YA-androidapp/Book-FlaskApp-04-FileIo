@@ -19,7 +19,7 @@ def login():
         return redirect(url_for('index'))
     return '''
         <form method="post">
-            <input type=text name=username><input type=submit value=Login>
+            <input type="text" name="username"><input type="submit" value="Login">
         </form>
     '''
 

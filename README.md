@@ -111,3 +111,38 @@ C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> set FLASK_APP=app.py
 ```
 
 ブラウザを開き、 [http://127.0.0.1:5000/](http://127.0.0.1:5000/) にアクセスして、ログイン・ログアウトできることを確認します。
+
+## JSON を受け取ったり、返したりする
+
+[app.py](app.py) を以下のコードに置き換えます。 [app03.py](app03.py)
+
+```py
+from flask import Flask, jsonify, make_response, request
+
+app = Flask(__name__)
+
+@app.route('/parse/json', methods=['GET', 'POST', 'DELETE', 'PUT'])
+def add():
+    if request.headers.get("Content-Type") == 'application/json':
+        # HTTPリクエストのMIMEタイプがapplication/json
+        data = request.get_json()
+        return jsonify(data)
+    else:
+        json_message = {
+            'error':'Not supported: {}'.format(request.headers.get("Content-Type"))
+        }
+        return make_response(jsonify(json_message), 400)
+```
+
+環境変数 `FLASK_APP` にファイル名を設定し、実行します。
+
+```ps
+C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> set FLASK_APP=app.py
+(flaskenv) PS C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> python -m flask run
+```
+
+(RESTED などの)REST クライアントを開き、 [http://127.0.0.1:5000/parse/json](http://127.0.0.1:5000/parse/json) に JSON 形式のリクエストボディを送信して、送ったデータと同じ JSON 形式のレスポンスボディになっていることを確認します。
+また、MIME タイプを変更するとエラーメッセージが返ることを確認します。
+
+<img src="README-src/rested01.png" width="30%" alt="成功時" />
+<img src="README-src/rested02.png" width="30%" alt="エラー時" />
