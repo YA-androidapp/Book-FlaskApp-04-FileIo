@@ -146,3 +146,72 @@ C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> set FLASK_APP=app.py
 
 <img src="README-src/rested01.png" width="30%" alt="成功時" />
 <img src="README-src/rested02.png" width="30%" alt="エラー時" />
+
+## ログを保存する
+
+[app.py](app.py) を以下のコードに置き換えます。 [app04.py](app04.py)
+
+```py
+from flask import Flask, make_response
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    app.logger.debug('A value for debugging')
+    app.logger.warning('A warning occurred (%d apples)', 42)
+    app.logger.error('An error occurred')
+    return make_response('logging', 400)
+```
+
+環境変数 `FLASK_APP` にファイル名を設定し、実行します。
+
+```ps
+C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> set FLASK_APP=app.py
+(flaskenv) PS C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> python -m flask run
+```
+
+(RESTED などの)REST クライアントを開き、 [http://127.0.0.1:5000/](http://127.0.0.1:5000/) にアクセスした後、ターミナルに以下のようにログが出力されていることを確認します。
+
+```ps
+(flaskenv) PS C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> python -m flask run
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)
+[2020-02-27 12:17:30,865] WARNING in app: A warning occurred (42 apples)
+[2020-02-27 12:17:30,866] ERROR in app: An error occurred
+127.0.0.1 - - [27/Feb/2020 12:17:30] "GET / HTTP/1.1" 400 -
+```
+
+デフォルトでは、ログレベルが `WARN` 以上のものしか出力されないので、 `INFO` なども出力させたい場合は以下のコードを追記します。
+
+```py
+# app = Flask(__name__) の次の行の辺りに追記
+
+app.logger.setLevel(logging.DEBUG)
+```
+
+```ps
+[2020-02-27 12:25:45,029] DEBUG in app: A value for debugging
+[2020-02-27 12:25:45,030] WARNING in app: A warning occurred (42 apples)
+[2020-02-27 12:25:45,031] ERROR in app: An error occurred
+127.0.0.1 - - [27/Feb/2020 12:25:45] "GET / HTTP/1.1" 400 -
+```
+
+ファイルにも書き出す場合は以下のコードを追記します。 `app.logger.setLevel` に指定したログレベルの方が、 `fileHandler.setLevel` で指定したログレベルよりも優先されます。
+
+```py
+# app = Flask(__name__)
+
+# app.logger.setLevel(logging.DEBUG) の次の行の辺りに追記
+
+LOGFILE = 'app.log'
+LOGFORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+fileHandler = logging.FileHandler(LOGFILE)
+fileHandler.setLevel(logging.DEBUG)
+formatter = logging.Formatter(LOGFORMAT)
+fileHandler.setFormatter(formatter)
+app.logger.addHandler(fileHandler)
+```
