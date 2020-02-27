@@ -2,6 +2,7 @@ from flask import Flask, jsonify, make_response, request
 
 app = Flask(__name__)
 
+
 @app.route('/parse/json', methods=['GET', 'POST', 'DELETE', 'PUT'])
 def add():
     if request.headers.get("Content-Type") == 'application/json':

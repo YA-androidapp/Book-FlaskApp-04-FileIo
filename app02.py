@@ -2,9 +2,8 @@ from flask import Flask, session, redirect, url_for, request
 from markupsafe import escape
 
 app = Flask(__name__)
-
-# Set the secret key to some random bytes. Keep this really secret!
 app.secret_key = b'K\x93\x9fj\xe9\r\x13\xad\xe1\x041\xcc\xf9\x8e\x00\xfb'
+
 
 @app.route('/')
 def index():

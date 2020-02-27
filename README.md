@@ -215,3 +215,74 @@ formatter = logging.Formatter(LOGFORMAT)
 fileHandler.setFormatter(formatter)
 app.logger.addHandler(fileHandler)
 ```
+
+## ファイルをアップロードする
+
+`enctype=multipart/form-data` 属性が指定された `form` の中にある `input type="file" />` タグで選択されたファイルを受け取ります。
+
+`secure_filename()` 関数を使用してファイル名に含まれると問題のある文字列を除去してから、 `file.save()` 関数を利用して保存します（本来はユーザーから受け取ったファイル名を使用するのではなく、サーバー側で生成するべきです）。
+
+[app.py](app.py) を以下のコードに置き換えます。 [app05.py](app05.py)
+
+```py
+import os
+from flask import Flask, flash, make_response, redirect, request, url_for
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = './uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'txt', 'png', 'jpg', 'jpeg', 'gif'}
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('uploaded_file',
+                                    filename=filename))
+    return '''
+    <!doctype html>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file" />
+        <input type="submit" value="Upload" />
+    </form>
+    '''
+
+@app.route('/uploaded_file')
+def uploaded_file():
+    filename = request.args.get('filename', '')
+    resp = app.make_response('Uploaded: {}'.format(filename))
+    resp.mimetype = "text/plain"
+    return resp
+```
+
+環境変数 `FLASK_APP` にファイル名を設定し、実行します。
+
+```ps
+C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> set FLASK_APP=app.py
+(flaskenv) PS C:\Users\y\Documents\GitHub\Book-FlaskApp-04-FileIo> python -m flask run
+```
+
+ブラウザを開き、 [http://127.0.0.1:5000/](http://127.0.0.1:5000/) にアクセスした後、任意のファイルを選択してアップロードできることを確認します。
+
+※このサンプルは安全ではないので、実稼働環境では使用しないでください。
